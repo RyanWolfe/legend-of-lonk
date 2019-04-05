@@ -15,7 +15,7 @@ def draw_background():
     :return:
     """
 
-    # TODO: OPTIMIZE THIS. PERFORMANCE PROBLEMS ARE RESULT OF BLITTING BACKGROUND HERE.
+    # TODO: OPTIMIZE THIS. PERFORMANCE PROBLEMS RESULT FROM BLITTING BACKGROUND HERE.
     obstacles.draw(screen)
     floors.draw(screen)
 
