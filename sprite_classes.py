@@ -81,7 +81,7 @@ class PlayerSprite(HealthMixin, RotationMixin, MovementMixin, pygame.sprite.Spri
         self.rect = self.image.get_rect()
         self.rect.center = get_center_pixel(initial_tile[0], initial_tile[1])
         self.health = 100
-        self.speed = 4
+        self.speed = 8
         # up, down, left, or right
         self.direction = "down"
 
@@ -125,11 +125,11 @@ class PlayerSprite(HealthMixin, RotationMixin, MovementMixin, pygame.sprite.Spri
         keys = pygame.key.get_pressed()
 
         if keys[K_SPACE]:
-            test_sword = Sword(self.rect.center, self.direction)
+            test_sword = Sword(self, self.direction)
             PauseStatus(self, 7)
 
         if keys[K_1]:
-            test_sword = Sword(self.rect.center, self.direction)
+            test_sword = Sword(self, self.direction)
             PauseStatus(self, 7)
         if keys[K_2]:
             player_shield = Shield(self, self.direction)
@@ -172,10 +172,11 @@ class Weapon(RotationMixin, NaturalDeathMixin, pygame.sprite.Sprite):
         self.image = image
 
         self.user = user
-        NaturalDeathMixin.__init__(self, 10)
+
+        NaturalDeathMixin.__init__(self, 20)
         RotationMixin.__init__(self, image, orientation)
         angle = RotationMixin.directions_to_angles[orientation]
-        RotationMixin.set_rotation_path(self, angle - 70, angle + 70, 20)
+        RotationMixin.set_rotation_path(self, angle - 70, angle + 70, 20, should_die=True)
         self.rect = self.image.get_rect()
         user_center = user.rect.center
         dx = 1 if orientation =='right' else -1 if orientation =='left' else 0
@@ -190,7 +191,6 @@ class Weapon(RotationMixin, NaturalDeathMixin, pygame.sprite.Sprite):
         if user in enemies:
             self.add(enemy_weapons)
             self.affected_group = player_group
-
 
         PauseStatus(user, 7)
 
@@ -256,7 +256,7 @@ class Shield(Weapon):
 class Projectile(MovementMixin, Weapon):
     def __init__(self, user, image, orientation, speed, damage):
         Weapon.__init__(self, user, image, orientation)
-        # RotationMixin.set_angular_velocity(self, 0)
+        RotationMixin.clear_rotation_state(self)
         MovementMixin.__init__(self)
         self.remaining_time = 500
         self.speed = speed
@@ -302,30 +302,13 @@ class IceRod(Weapon):
         carrier = Arrow(user, orientation)
         IceStatus(carrier)
 3
-class Sword(RotationMixin, NaturalDeathMixin, pygame.sprite.Sprite):
-    """
-    class for player's sword (a type of player weapon)
-    """
-    def __init__(self, player_center, orientation="right"):
-        """
+class Sword(Weapon):
+    def __init__(self, user, orientation="right"):
 
-        :param player_center: tuple(int, int)
-        :param orientation: (string) can be 'right', 'up', 'down', or 'left'. Determines which way weapon should face.
-        """
         pygame.sprite.Sprite.__init__(self)
-        self.image = load_image('sword1_{}.png'.format(orientation), 'sword')
+        image = load_image('sword1_{}.png'.format(orientation), 'sword')
+        Weapon.__init__(self, user, image, orientation)
 
-
-
-        NaturalDeathMixin.__init__(self, 10)
-        RotationMixin.__init__(self, self.image, orientation)
-        player_angle = RotationMixin.directions_to_angles[orientation]
-        RotationMixin.set_rotation_path(self, player_angle - 70, player_angle + 70, 20)
-        self.rect = self.image.get_rect()
-        x = player_center[0] + (1 if orientation=='right' else -1 if orientation=='left' else 0)*64
-        y = player_center[1] + (1 if orientation=='down' else -1 if orientation=='up' else 0)*64
-        self.rect.center = (x, y)
-        player_weapons.add(self)
 
     def get_damage(self):
         """
@@ -338,7 +321,6 @@ class Sword(RotationMixin, NaturalDeathMixin, pygame.sprite.Sprite):
         updates age, kills self when too old.
         :return: None
         """
-        NaturalDeathMixin.update(self)
         RotationMixin.update(self)
 
 
